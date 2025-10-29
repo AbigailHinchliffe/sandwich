@@ -55,6 +55,8 @@ class OrderScreen extends StatefulWidget {
 
 class _OrderScreenState extends State<OrderScreen> {
   int _quantity = 0;
+  final TextEditingController _notesController = TextEditingController();
+  String _notes = '';
 
   void _increaseQuantity() {
     if (_quantity < widget.maxQuantity) {
@@ -66,6 +68,12 @@ class _OrderScreenState extends State<OrderScreen> {
     if (_quantity > 0) {
       setState(() => _quantity--);
     }
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
   }
 
   @override
@@ -81,6 +89,29 @@ class _OrderScreenState extends State<OrderScreen> {
             OrderItemDisplay(
               _quantity,
               'Footlong',
+              _notes
+            ),
+            OrderItemDisplay(
+              _quantity,
+              'Panini',
+              _notes,
+            ),
+            OrderItemDisplay(
+              _quantity,
+              'Wrap',
+              _notes,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: TextField(
+                controller: _notesController,
+                decoration: const InputDecoration(
+                  labelText: 'Special Requests/Notes',
+                  hintText: 'e.g. No onions, extra cheese',
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (v) => setState(() => _notes = v),
+              ),
             ),
             Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -105,14 +136,17 @@ class _OrderScreenState extends State<OrderScreen> {
 }
 
 class OrderItemDisplay extends StatelessWidget {
-  final String itemType;
   final int quantity;
+  final String itemType;
+  final String notes;
 
-  const OrderItemDisplay (this.quantity,this.itemType,{super.key});
+  const OrderItemDisplay(this.quantity, this.itemType, this.notes, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Row( mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    final emojis = List.filled(quantity, '🥪').join();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           color: Colors.cyanAccent,
@@ -120,9 +154,17 @@ class OrderItemDisplay extends StatelessWidget {
           width: 300,
           height: 80,
           child: Text(
-            "$quantity $itemType sandwich(es): ${'🥪' * quantity}", 
+            "$quantity $itemType sandwich(es): $emojis",
           ),
         ),
+        if (notes.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 6.0),
+            child: Text(
+              'Notes: $notes',
+              style: const TextStyle(fontStyle: FontStyle.italic),
+            ),
+          ),
       ],
     );
   }

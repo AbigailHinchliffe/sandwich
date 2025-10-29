@@ -20,6 +20,19 @@ class App extends StatelessWidget {
               const OrderItemDisplay(5, 'Footlong'),
               const OrderItemDisplay(3, 'Panini'),
               const OrderItemDisplay(7, 'Wrap'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children:[
+                  ElevatedButton(
+                    onPressed: () => print('Add button pressed!'),
+                    child: const Text('Add'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => print('Remove button pressed!'),
+                    child: const Text('Remove'),
+                  )
+                ]
+              )
             ],
           ),
         ),
@@ -44,7 +57,7 @@ class OrderItemDisplay extends StatelessWidget {
           width: 300,
           height: 80,
           child: Text(
-            "$quantity $itemType sandwich(es): ${'🥪' * quantity}",
+            "$quantity $itemType sandwich(es): ${'🥪' * quantity}", 
           ),
         ),
       ],

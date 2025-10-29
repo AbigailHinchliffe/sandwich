@@ -11,32 +11,33 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Sandwich Shop App',
-      home: Scaffold(
-        appBar: AppBar(title: const Text('Sandwich Counter')),
-        body: Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              const OrderItemDisplay(5, 'Footlong'),
-              const OrderItemDisplay(3, 'Panini'),
-              const OrderItemDisplay(7, 'Wrap'),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children:[
-                  ElevatedButton(
-                    onPressed: () => print('Add button pressed!'),
-                    child: const Text('Add'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => print('Remove button pressed!'),
-                    child: const Text('Remove'),
-                  )
-                ]
-              )
-            ],
-          ),
-        ),
-      ),
+      home: OrderScreen(maxQuantity: 5),
+      //home: Scaffold(
+      //  appBar: AppBar(title: const Text('Sandwich Counter')),
+      //  body: Center(
+      //    child: Row(
+      //      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      //      children: [
+      //        const OrderItemDisplay(5, 'Footlong'),
+      //        const OrderItemDisplay(3, 'Panini'),
+      //        const OrderItemDisplay(7, 'Wrap'),
+      //        Row(
+      //          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      //          children:[
+      //            ElevatedButton(
+      //              onPressed: () => print('Add button pressed!'),
+      //              child: const Text('Add'),
+      //            ),
+      //            ElevatedButton(
+      //              onPressed: () => print('Remove button pressed!'),
+      //              child: const Text('Remove'),
+      //            )
+      //          ]
+      //        )
+      //      ],
+      //    ),
+      //  ),
+      //),
     );
   }
 }

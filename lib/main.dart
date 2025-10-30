@@ -11,7 +11,7 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Sandwich Shop App',
-      home: OrderScreen(maxQuantity: 8),
+      home: OrderScreen(maxQuantity: 5),
       //home: Scaffold(
       //  appBar: AppBar(title: const Text('Sandwich Counter')),
       //  body: Center(
@@ -82,25 +82,20 @@ class _OrderScreenState extends State<OrderScreen> {
       appBar: AppBar(
         title: const Text('Sandwich Counter'),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.only(top: 16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            OrderItemDisplay(
-              _quantity,
-              'Footlong',
-              _notes
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                OrderItemDisplay(_quantity, 'Footlong', _notes),
+                OrderItemDisplay(_quantity, 'Panini', _notes),
+                OrderItemDisplay(_quantity, 'Wrap', _notes),
+              ],
             ),
-            OrderItemDisplay(
-              _quantity,
-              'Panini',
-              _notes,
-            ),
-            OrderItemDisplay(
-              _quantity,
-              'Wrap',
-              _notes,
-            ),
+            const SizedBox(height: 16.0),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: TextField(
@@ -114,21 +109,20 @@ class _OrderScreenState extends State<OrderScreen> {
               ),
             ),
             Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: _increaseQuantity,
-                    //() => print('Add button pressed!'),
-                    child: const Text('Add'),
-                  ),
-                  ElevatedButton(
-                    onPressed: _decreaseQuantity,
-                    //=> print('Remove button pressed!'),
-                    child: const Text('Remove'),
-                  ),
-                ],
-              )
-            ]
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: _increaseQuantity,
+                  child: const Text('Add'),
+                ),
+                const SizedBox(width: 8.0),
+                ElevatedButton(
+                  onPressed: _decreaseQuantity,
+                  child: const Text('Remove'),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

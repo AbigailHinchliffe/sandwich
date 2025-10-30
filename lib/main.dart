@@ -32,6 +32,9 @@ class _OrderScreenState extends State<OrderScreen> {
   final TextEditingController _notesController = TextEditingController();
   String _notes = '';
 
+  final List<String> _sizes = ['6-inch', 'Footlong'];
+  String _selectedSize = 'Footlong';
+
   void _increaseQuantity() {
     if (_quantity < widget.maxQuantity) {
       setState(() => _quantity++);
@@ -64,10 +67,25 @@ class _OrderScreenState extends State<OrderScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                OrderItemDisplay(_quantity, 'Footlong', _notes),
-                OrderItemDisplay(_quantity, 'Panini', _notes),
-                OrderItemDisplay(_quantity, 'Wrap', _notes),
+                OrderItemDisplay(_quantity, _selectedSize, _notes),
+                //OrderItemDisplay(_quantity, 'Panini', _notes),
+                //OrderItemDisplay(_quantity, 'Wrap', _notes),
               ],
+            ),
+            const SizedBox(height: 16.0),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: SegmentedButton<String>(
+                segments: <ButtonSegment<String>>[
+                  for (final s in _sizes) ButtonSegment(value: s, label: Text(s)),
+                ],
+                selected: <String>{_selectedSize},
+                onSelectionChanged: (Set<String> newSelection){
+                  setState(() {
+                    _selectedSize = newSelection.first;
+                  });
+                },
+              ),
             ),
             const SizedBox(height: 16.0),
             Padding(
@@ -93,7 +111,7 @@ class _OrderScreenState extends State<OrderScreen> {
                 const SizedBox(width: 8.0),
                 StyledButton(
                   label: 'Remove',
-                  onPressed: _quantity > 0 ? _decreaseQuantity: null,
+                  onPressed: _quantity > 0 ? _decreaseQuantity : null,
                   colour: Colors.redAccent,
                 ),
               ],

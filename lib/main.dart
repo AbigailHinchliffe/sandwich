@@ -87,13 +87,13 @@ class _OrderScreenState extends State<OrderScreen> {
               children: [
                 StyledButton(
                   label: 'Add',
-                  onPressed: _increaseQuantity,
+                  onPressed: _quantity < widget.maxQuantity ? _increaseQuantity : null,
                   colour: Colors.blueAccent,
                 ),
                 const SizedBox(width: 8.0),
                 StyledButton(
                   label: 'Remove',
-                  onPressed: _decreaseQuantity,
+                  onPressed: _quantity > 0 ? _decreaseQuantity: null,
                   colour: Colors.redAccent,
                 ),
               ],
@@ -107,7 +107,7 @@ class _OrderScreenState extends State<OrderScreen> {
 
 class StyledButton extends StatelessWidget {
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Color colour;
 
   const StyledButton({required this.label, required this.onPressed, required this.colour, super.key});
@@ -118,6 +118,8 @@ class StyledButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: colour,
         foregroundColor: Colors.white,
+        disabledBackgroundColor: Colors.grey,
+        disabledForegroundColor: Colors.black38,
       ),
       child: Text(label),
     );

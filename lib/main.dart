@@ -12,32 +12,6 @@ class App extends StatelessWidget {
     return MaterialApp(
       title: 'Sandwich Shop App',
       home: OrderScreen(maxQuantity: 5),
-      //home: Scaffold(
-      //  appBar: AppBar(title: const Text('Sandwich Counter')),
-      //  body: Center(
-      //    child: Row(
-      //      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      //      children: [
-      //        const OrderItemDisplay(5, 'Footlong'),
-      //        const OrderItemDisplay(3, 'Panini'),
-      //        const OrderItemDisplay(7, 'Wrap'),
-      //        Row(
-      //          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      //          children:[
-      //            ElevatedButton(
-      //              onPressed: () => print('Add button pressed!'),
-      //              child: const Text('Add'),
-      //            ),
-      //            ElevatedButton(
-      //              onPressed: () => print('Remove button pressed!'),
-      //              child: const Text('Remove'),
-      //            )
-      //          ]
-      //        )
-      //      ],
-      //    ),
-      //  ),
-      //),
     );
   }
 }
@@ -111,20 +85,41 @@ class _OrderScreenState extends State<OrderScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(
+                StyledButton(
+                  label: 'Add',
                   onPressed: _increaseQuantity,
-                  child: const Text('Add'),
+                  colour: Colors.blueAccent,
                 ),
                 const SizedBox(width: 8.0),
-                ElevatedButton(
+                StyledButton(
+                  label: 'Remove',
                   onPressed: _decreaseQuantity,
-                  child: const Text('Remove'),
+                  colour: Colors.redAccent,
                 ),
               ],
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class StyledButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+  final Color colour;
+
+  const StyledButton({required this.label, required this.onPressed, required this.colour, super.key});
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: colour,
+        foregroundColor: Colors.white,
+      ),
+      child: Text(label),
     );
   }
 }

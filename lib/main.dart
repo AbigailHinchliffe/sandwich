@@ -11,7 +11,6 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Sandwich Shop App',
-<<<<<<< HEAD
       home: Scaffold(
         appBar: AppBar(title: const Text('Sandwich Counter')),
         body: Center(
@@ -161,7 +160,6 @@ class StyledButton extends StatelessWidget {
 }
 
 class OrderItemDisplay extends StatelessWidget {
-<<<<<<< HEAD
   final String itemType;
   final int quantity;
 
@@ -170,19 +168,6 @@ class OrderItemDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row( mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-=======
-  final int quantity;
-  final String itemType;
-  final String notes;
-
-  const OrderItemDisplay(this.quantity, this.itemType, this.notes, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final emojis = List.filled(quantity, '🥪').join();
-    return Column(
-      mainAxisSize: MainAxisSize.min,
->>>>>>> f3c239b98368acbefb3ed8fe3b9dfbc97cc2865f
       children: [
         Container(
           color: Colors.cyanAccent,
@@ -190,23 +175,9 @@ class OrderItemDisplay extends StatelessWidget {
           width: 300,
           height: 80,
           child: Text(
-<<<<<<< HEAD
             "$quantity $itemType sandwich(es): ${'🥪' * quantity}",
           ),
         ),
-=======
-            "$quantity $itemType sandwich(es): $emojis",
-          ),
-        ),
-        if (notes.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 6.0),
-            child: Text(
-              'Notes: $notes',
-              style: const TextStyle(fontStyle: FontStyle.italic),
-            ),
-          ),
->>>>>>> f3c239b98368acbefb3ed8fe3b9dfbc97cc2865f
       ],
     );
   }

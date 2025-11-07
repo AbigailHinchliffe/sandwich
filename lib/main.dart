@@ -47,7 +47,7 @@ class _OrderScreenState extends State<OrderScreen> {
   final TextEditingController _notesController = TextEditingController();
   String _notes = '';
 
-  final List<String> _sizes = ['6-inch', 'Footlong'];
+  final List<String> _sizes = ['6-inch', 'Footlong','Panini'];
   String _selectedSize = 'Footlong';
 
   void _increaseQuantity() {

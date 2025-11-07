@@ -11,20 +11,6 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Sandwich Shop App',
-      home: Scaffold(
-        appBar: AppBar(title: const Text('Sandwich Counter')),
-        body: Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              const OrderItemDisplay(5, 'Footlong'),
-              const OrderItemDisplay(3, 'Panini'),
-              const OrderItemDisplay(7, 'Wrap'),
-            ],
-          ),
-        ),
-      ),
-=======
       home: OrderScreen(maxQuantity: 5),
     );
   }
@@ -46,7 +32,7 @@ class _OrderScreenState extends State<OrderScreen> {
   final TextEditingController _notesController = TextEditingController();
   String _notes = '';
 
-  final List<String> _sizes = ['6-inch', 'Footlong','Panini'];
+  final List<String> _sizes = ['6-inch', 'Footlong'];
   String _selectedSize = 'Footlong';
 
   void _increaseQuantity() {
@@ -154,20 +140,22 @@ class StyledButton extends StatelessWidget {
         disabledForegroundColor: Colors.black38,
       ),
       child: Text(label),
->>>>>>> f3c239b98368acbefb3ed8fe3b9dfbc97cc2865f
     );
   }
 }
 
 class OrderItemDisplay extends StatelessWidget {
-  final String itemType;
   final int quantity;
+  final String itemType;
+  final String notes;
 
-  const OrderItemDisplay (this.quantity,this.itemType,{super.key});
+  const OrderItemDisplay(this.quantity, this.itemType, this.notes, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Row( mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    final emojis = List.filled(quantity, '🥪').join();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           color: Colors.cyanAccent,
@@ -175,9 +163,17 @@ class OrderItemDisplay extends StatelessWidget {
           width: 300,
           height: 80,
           child: Text(
-            "$quantity $itemType sandwich(es): ${'🥪' * quantity}",
+            "$quantity $itemType sandwich(es): $emojis",
           ),
         ),
+        if (notes.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 6.0),
+            child: Text(
+              'Notes: $notes',
+              style: const TextStyle(fontStyle: FontStyle.italic),
+            ),
+          ),
       ],
     );
   }

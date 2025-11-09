@@ -192,7 +192,16 @@ class StyledButton extends StatelessWidget {
         disabledBackgroundColor: Colors.grey,
         disabledForegroundColor: Colors.black38,
       ),
-      child: Text(label),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon),
+            const SizedBox(width: 6),
+          ],
+          Text(label),
+        ],
+      ),
     );
   }
 }
@@ -200,7 +209,7 @@ class StyledButton extends StatelessWidget {
 class OrderItemDisplay extends StatelessWidget {
   final int quantity;
   final String itemType;
-  final BreadType? breadType;
+  final BreadType breadType;
   final String notes;
 
   const OrderItemDisplay(this.quantity, this.itemType, this.breadType, this.notes, {super.key});
@@ -217,14 +226,14 @@ class OrderItemDisplay extends StatelessWidget {
           width: 300,
           height: 80,
           child: Text(
-            "$quantity $itemType sandwich(es): $emojis",
+            "$quantity ${breadType.name} $itemType sandwich(es): $emojis",
           ),
         ),
         if (notes.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 6.0),
             child: Text(
-              'Notes: $notes',
+              'Note: $notes',
               style: const TextStyle(fontStyle: FontStyle.italic),
             ),
           ),

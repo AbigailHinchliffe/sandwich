@@ -132,14 +132,5 @@ Planned improvements
 
 Maintainership / contact:
 - Name: Abigail Hinchliffe
-- Email / profile: [abigail.hinchliffe@gmail.com]
-
----
-
-## Screenshots / GIFs
-
-Add screenshots or GIFs to the `docs/` folder and reference them here. Example Markdown to insert after adding an image:
-
-![Order screen example](docs/screenshot-order.png)
 
 ---

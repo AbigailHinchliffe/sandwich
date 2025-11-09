@@ -175,11 +175,11 @@ void main() {
 
       expect(find.text('0 white footlong sandwich(es): '), findsOneWidget);
 
-      await tester.tap(find.byType(Switch));
+      await tester.tap(find.byKey(const Key('size_switch')));
       await tester.pump();
       expect(find.text('0 white six-inch sandwich(es): '), findsOneWidget);
 
-      await tester.tap(find.byType(Switch));
+      await tester.tap(find.byKey(const Key('size_switch')));
       await tester.pump();
       expect(find.text('0 white footlong sandwich(es): '), findsOneWidget);
     });

@@ -168,4 +168,20 @@ void main() {
       expect(find.text('Note: Lots of lettuce'), findsOneWidget);
     });
   });
+
+  group('OrderScreen - Toggle', () {
+    testWidgets('shows sliding widget toggles correctly', (WidgetTester tester) async {
+      await tester.pumpWidget(const App());
+
+      expect(find.text('0 white footlong sandwich(es): '), findsOneWidget);
+
+      await tester.tap(find.byType(Switch));
+      await tester.pump();
+      expect(find.text('0 white six-inch sandwich(es): '), findsOneWidget);
+
+      await tester.tap(find.byType(Switch));
+      await tester.pump();
+      expect(find.text('0 white footlong sandwich(es): '), findsOneWidget);
+    });
+  });
 }

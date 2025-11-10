@@ -61,6 +61,7 @@ Main user flows:
 - Add / Remove: use the Add and Remove buttons to change the quantity. The preview string and emoji count update to match the quantity. Quantity respects the configured max.
 - Notes: type order instructions into the notes TextField. The preview shows "Note: ..." when non-empty; otherwise it shows "Note: No notes added." per tests.
 - The UI widgets are intentionally simple to make the app easy to read and test.
+- Dynamic price Adjustements for Orders
 
 Notes:
 - The app uses an OrderRepository to manage quantity state and ensure it does not go below 0 or above the configured max (default max shown in the UI is 5 in tests).

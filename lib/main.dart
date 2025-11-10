@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sandwich/repositories/pricing_repository.dart';
 import 'package:sandwich/views/app_styles.dart';
 import 'package:sandwich/repositories/order_repository.dart';
 
@@ -33,6 +34,7 @@ class OrderScreen extends StatefulWidget {
 
 class _OrderScreenState extends State<OrderScreen> {
   late final OrderRepository _orderRepository;
+  late final PricingRepository _pricingRepository;
   final TextEditingController _notesController = TextEditingController();
   bool _isFootlong = true;
   BreadType _selectedBreadType = BreadType.white;
@@ -42,6 +44,7 @@ class _OrderScreenState extends State<OrderScreen> {
   void initState() {
     super.initState();
     _orderRepository = OrderRepository(maxQuantity: widget.maxQuantity);
+    _pricingRepository = PricingRepository();
     _notesController.addListener(() {
       setState(() {});
     });
@@ -91,17 +94,13 @@ class _OrderScreenState extends State<OrderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    String sandwichType = 'footlong';
-    if (!_isFootlong) {
-      sandwichType = 'six-inch';
-    }
+    final double totalPrice = _pricingRepository.calculatePrice(
+      quantity: _orderRepository.quantity,
+      isFootlong: _isFootlong,
+    );
 
-    String noteForDisplay;
-    if (_notesController.text.isEmpty) {
-      noteForDisplay = 'No notes added.';
-    } else {
-      noteForDisplay = _notesController.text;
-    }
+    final String sandwichType = _isFootlong ? 'footlong' : 'six-inch';
+    final String noteForDisplay = _notesController.text;
 
     return Scaffold(
       appBar: AppBar(
@@ -163,6 +162,13 @@ class _OrderScreenState extends State<OrderScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Add a note (e.g., no onions, extra cheese)',
                 ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                'Total: \$${totalPrice.toStringAsFixed(2)}',
+                style: normalText,
               ),
             ),
             const SizedBox(height: 20),

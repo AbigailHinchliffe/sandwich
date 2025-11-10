@@ -1,0 +1,24 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:sandwich/repositories/pricing_repository.dart';
+
+void main() {
+  group('PricingRepository', () {
+    test('calculates total price for six-inch sandwiches', () {
+      final repo = PricingRepository();
+      final total = repo.calculatePrice(quantity: 2, isFootlong: false);
+      expect(total, 14.00); // 2 * 7.00
+    });
+
+    test('calculates total price for footlong sandwiches', () {
+      final repo = PricingRepository();
+      final total = repo.calculatePrice(quantity: 3, isFootlong: true);
+      expect(total, 33.00); // 3 * 11.00
+    });
+
+    test('zero quantity returns 0.0', () {
+      final repo = PricingRepository();
+      final total = repo.calculatePrice(quantity: 0, isFootlong: true);
+      expect(total, 0.0);
+    });
+  });
+}

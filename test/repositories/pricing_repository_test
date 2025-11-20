@@ -6,13 +6,13 @@ void main() {
     test('calculates total price for six-inch sandwiches', () {
       final repo = PricingRepository();
       final total = repo.calculatePrice(quantity: 2, isFootlong: false);
-      expect(total, 14.00); // 2 * 7.00
+      expect(total, 14.00);
     });
 
     test('calculates total price for footlong sandwiches', () {
       final repo = PricingRepository();
       final total = repo.calculatePrice(quantity: 3, isFootlong: true);
-      expect(total, 33.00); // 3 * 11.00
+      expect(total, 33.00);
     });
 
     test('zero quantity returns 0.0', () {

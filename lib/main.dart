@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sandwich/repositories/pricing_repository.dart';
 import 'package:sandwich/views/app_styles.dart';
-import 'package:sandwich/repositories/order_repository.dart';
+import 'package:sandwich/models/cart.dart';
+//import 'package:sandwich/repositories/order_repository.dart';
 
 enum BreadType { white, wheat, multigrain, sourdough, wholemeal }
 
@@ -33,8 +34,11 @@ class OrderScreen extends StatefulWidget {
 }
 
 class _OrderScreenState extends State<OrderScreen> {
-  late final OrderRepository _orderRepository;
+  //late final OrderRepository _orderRepository;
+  // local quantity replaces removed OrderRepository
+  int _quantity = 0;
   late final PricingRepository _pricingRepository;
+  late final Cart _cart;
   final TextEditingController _notesController = TextEditingController();
   bool _isFootlong = true;
   BreadType _selectedBreadType = BreadType.white;
@@ -43,8 +47,10 @@ class _OrderScreenState extends State<OrderScreen> {
   @override
   void initState() {
     super.initState();
-    _orderRepository = OrderRepository(maxQuantity: widget.maxQuantity);
+    //_order_repository = OrderRepository(maxQuantity: widget.maxQuantity);
     _pricingRepository = PricingRepository();
+    // initialize cart with pricing repo
+    _cart = Cart(pricingRepo: _pricingRepository);
     _notesController.addListener(() {
       setState(() {});
     });
@@ -57,15 +63,15 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   VoidCallback? _getIncreaseCallback() {
-    if (_orderRepository.canIncrement) {
-      return () => setState(_orderRepository.increment);
+    if (_quantity < widget.maxQuantity) {
+      return () => setState(() => _quantity += 1);
     }
     return null;
   }
 
   VoidCallback? _getDecreaseCallback() {
-    if (_orderRepository.canDecrement) {
-      return () => setState(_orderRepository.decrement);
+    if (_quantity > 0) {
+      return () => setState(() => _quantity -= 1);
     }
     return null;
   }
@@ -95,7 +101,7 @@ class _OrderScreenState extends State<OrderScreen> {
   @override
   Widget build(BuildContext context) {
     final double totalPrice = _pricingRepository.calculatePrice(
-      quantity: _orderRepository.quantity,
+      quantity: _quantity,
       isFootlong: _isFootlong,
     );
 
@@ -104,6 +110,7 @@ class _OrderScreenState extends State<OrderScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: CartIconButton(cart: _cart),
         title: const Text(
           'Sandwich Counter',
           style: heading1,
@@ -114,7 +121,7 @@ class _OrderScreenState extends State<OrderScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             OrderItemDisplay(
-              _orderRepository.quantity,
+              _quantity,
               sandwichType,
               _selectedBreadType,
               noteForDisplay,
@@ -176,7 +183,20 @@ class _OrderScreenState extends State<OrderScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 StyledButton(
-                  onPressed: _getIncreaseCallback(),
+                  onPressed: () {
+                    final cb = _getIncreaseCallback();
+                    if (cb != null) {
+                      cb();
+                      // add one of the current selection to the cart
+                      _cart.addItem(CartItem(
+                        sandwichType: sandwichType,
+                        bread: _selectedBreadType.name,
+                        quantity: 1,
+                        notes: noteForDisplay,
+                        isFootlong: _isFootlong,
+                      ));
+                    }
+                  },
                   icon: Icons.add,
                   label: 'Add',
                   colour: Colors.blue,

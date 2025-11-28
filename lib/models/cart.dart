@@ -49,7 +49,7 @@ class Cart extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Remove one unit from the item at [index]. If quantity reaches 0 remove the item.
+  /// Remove one unit from the item at index. If quantity reaches 0 remove the item.
   void removeOneAt(int index) {
     if (index < 0 || index >= _items.length) return;
     final item = _items[index];

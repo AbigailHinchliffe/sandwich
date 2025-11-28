@@ -1,6 +1,5 @@
-//remove order repo & the test for worksheet 5
 
-enum BreadType { white, wheat, wholemeal }
+enum BreadType { white, wheat, multigrain, sourdough, wholemeal }
 
 enum SandwichType {
   veggieDelight,
@@ -41,6 +40,6 @@ class Sandwich {
     } else {
       sizeString = 'six_inch';
     }
-    return 'assets/images/${typeString}_$sizeString.png';
+    return 'assets/images/${typeString}_$sizeString.jpg';
   }
 }

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sandwich/repositories/pricing_repository.dart';
 import 'package:sandwich/views/app_styles.dart';
 import 'package:sandwich/models/cart.dart';
-
-enum BreadType { white, wheat, multigrain, sourdough, wholemeal }
+import 'package:sandwich/models/sandwich.dart';
 
 void main() {
   runApp(const App());
@@ -33,20 +32,19 @@ class OrderScreen extends StatefulWidget {
 }
 
 class _OrderScreenState extends State<OrderScreen> {
-  // local quantity replaces removed OrderRepository
-  int _quantity = 0;
   late final PricingRepository _pricingRepository;
   late final Cart _cart;
   final TextEditingController _notesController = TextEditingController();
+
+  SandwichType _selectedSandwichType = SandwichType.veggieDelight;
   bool _isFootlong = true;
   BreadType _selectedBreadType = BreadType.white;
-  bool _isToasted = false;
+  int _quantity = 1;
 
   @override
   void initState() {
     super.initState();
     _pricingRepository = PricingRepository();
-    // initialize cart with pricing repo
     _cart = Cart(pricingRepo: _pricingRepository);
     _notesController.addListener(() {
       setState(() {});
@@ -59,40 +57,116 @@ class _OrderScreenState extends State<OrderScreen> {
     super.dispose();
   }
 
-  VoidCallback? _getIncreaseCallback() {
-    if (_quantity < widget.maxQuantity) {
-      return () => setState(() => _quantity += 1);
+  void _addToCart() {
+    if (_quantity > 0) {
+      final Sandwich sandwich = Sandwich(
+        type: _selectedSandwichType,
+        isFootlong: _isFootlong,
+        breadType: _selectedBreadType,
+      );
+
+      setState(() {
+        // create a CartItem and add to cart
+        _cart.addItem(CartItem(
+          sandwichType: sandwich.name,
+          bread: _selectedBreadType.name,
+          quantity: _quantity,
+          notes: _notesController.text,
+          isFootlong: _isFootlong,
+        ));
+      });
+
+      final String sizeText = _isFootlong ? 'footlong' : 'six-inch';
+      final String confirmationMessage =
+          'Added $_quantity $sizeText ${sandwich.name} sandwich(es) on ${_selectedBreadType.name} bread to cart';
+
+      debugPrint(confirmationMessage);
+    }
+  }
+
+  VoidCallback? _getAddToCartCallback() {
+    if (_quantity > 0) {
+      return _addToCart;
     }
     return null;
+  }
+
+  List<DropdownMenuEntry<SandwichType>> _buildSandwichTypeEntries() {
+    List<DropdownMenuEntry<SandwichType>> entries = [];
+    for (SandwichType type in SandwichType.values) {
+      Sandwich sandwich =
+          Sandwich(type: type, isFootlong: true, breadType: BreadType.white);
+      DropdownMenuEntry<SandwichType> entry = DropdownMenuEntry<SandwichType>(
+        value: type,
+        label: sandwich.name,
+      );
+      entries.add(entry);
+    }
+    return entries;
+  }
+
+  List<DropdownMenuEntry<BreadType>> _buildBreadTypeEntries() {
+    List<DropdownMenuEntry<BreadType>> entries = [];
+    for (BreadType bread in BreadType.values) {
+      DropdownMenuEntry<BreadType> entry = DropdownMenuEntry<BreadType>(
+        value: bread,
+        label: bread.name,
+      );
+      entries.add(entry);
+    }
+    return entries;
+  }
+
+  String _getCurrentImagePath() {
+    final Sandwich sandwich = Sandwich(
+      type: _selectedSandwichType,
+      isFootlong: _isFootlong,
+      breadType: _selectedBreadType,
+    );
+    return sandwich.image;
+  }
+
+  void _onSandwichTypeChanged(SandwichType? value) {
+    if (value != null) {
+      setState(() {
+        _selectedSandwichType = value;
+      });
+    }
+  }
+
+  void _onSizeChanged(bool value) {
+    setState(() {
+      _isFootlong = value;
+    });
+  }
+
+  void _onBreadTypeChanged(BreadType? value) {
+    if (value != null) {
+      setState(() {
+        _selectedBreadType = value;
+      });
+    }
+  }
+
+  void _increaseQuantity() {
+    setState(() {
+      if (_quantity < widget.maxQuantity) _quantity++;
+    });
+  }
+
+  void _decreaseQuantity() {
+    if (_quantity > 0) {
+      setState(() {
+        _quantity--;
+      });
+    }
   }
 
   VoidCallback? _getDecreaseCallback() {
     if (_quantity > 0) {
-      return () => setState(() => _quantity -= 1);
+      return _decreaseQuantity;
     }
     return null;
-  }
-
-  void _onSandwichTypeChanged(bool value) {
-    setState(() => _isFootlong = value);
-  }
-
-  void _onBreadTypeSelected(BreadType? value) {
-    if (value != null) {
-      setState(() => _selectedBreadType = value);
-    }
-  }
-
-  List<DropdownMenuEntry<BreadType>> _buildDropdownEntries() {
-    List<DropdownMenuEntry<BreadType>> entries = [];
-    for (BreadType bread in BreadType.values) {
-      DropdownMenuEntry<BreadType> newEntry = DropdownMenuEntry<BreadType>(
-        value: bread,
-        label: bread.name,
-      );
-      entries.add(newEntry);
-    }
-    return entries;
   }
 
   @override
@@ -102,28 +176,14 @@ class _OrderScreenState extends State<OrderScreen> {
       isFootlong: _isFootlong,
     );
 
-    final String sandwichType = _isFootlong ? 'footlong' : 'six-inch';
-    final String noteForDisplay = _notesController.text;
-
     return Scaffold(
       appBar: AppBar(
-        leading: SizedBox(
-          height: 40,
-          width: 40,
-          child: Image.asset(
-            'assets/images/logo.png',
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              return const Icon(Icons.broken_image, color: Colors.white);
-            },
-          ),
-        ),
         title: const Text(
           'Sandwich Counter',
           style: heading1,
         ),
         actions: [
-          // Cart icon on the top-right
+          // show cart icon in top-right
           CartIconButton(cart: _cart),
           const SizedBox(width: 8),
         ],
@@ -131,103 +191,92 @@ class _OrderScreenState extends State<OrderScreen> {
       body: Center(
         child: SingleChildScrollView(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              OrderItemDisplay(
-                _quantity,
-                sandwichType,
-                _selectedBreadType,
-                noteForDisplay,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 300,
+                child: Image.asset(
+                  _getCurrentImagePath(),
+                  fit: BoxFit.cover,
+                  // improved error handling and placeholder so you don't see the red X
+                  errorBuilder: (context, error, stackTrace) {
+                    // log the failure so you can see the attempted path in the console
+                    debugPrint('Failed to load image: ${_getCurrentImagePath()} -> $error');
+                    return Container(
+                      color: Colors.grey.shade200,
+                      alignment: Alignment.center,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.broken_image, size: 48, color: Colors.black38),
+                          SizedBox(height: 8),
+                          Text('Image not available', style: normalText),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 20),
+              DropdownMenu<SandwichType>(
+                width: double.infinity,
+                label: const Text('Sandwich Type'),
+                textStyle: normalText,
+                initialSelection: _selectedSandwichType,
+                onSelected: _onSandwichTypeChanged,
+                dropdownMenuEntries: _buildSandwichTypeEntries(),
               ),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('six-inch', style: normalText),
+                  const Text('Six-inch', style: normalText),
                   Switch(
-                    key: const Key('size_switch'),
                     value: _isFootlong,
-                    onChanged: _onSandwichTypeChanged,
+                    onChanged: _onSizeChanged,
                   ),
-                  const Text('footlong', style: normalText),
+                  const Text('Footlong', style: normalText),
                 ],
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('untoasted', style: normalText),
-                  Switch(
-                    key: const Key('toast_switch'),
-                    value: _isToasted,
-                    onChanged: (value) {
-                      setState(() => _isToasted = value);
-                    },
-                  ),
-                  const Text('toasted', style: normalText),
-                ],
-              ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 20),
               DropdownMenu<BreadType>(
+                width: double.infinity,
+                label: const Text('Bread Type'),
                 textStyle: normalText,
                 initialSelection: _selectedBreadType,
-                onSelected: _onBreadTypeSelected,
-                dropdownMenuEntries: _buildDropdownEntries(),
-              ),
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.all(40.0),
-                child: TextField(
-                  key: const Key('notes_textfield'),
-                  controller: _notesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Add a note (e.g., no onions, extra cheese)',
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Text(
-                  'Total: \$${totalPrice.toStringAsFixed(2)}',
-                  style: normalText,
-                ),
+                onSelected: _onBreadTypeChanged,
+                dropdownMenuEntries: _buildBreadTypeEntries(),
               ),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  StyledButton(
-                    onPressed: () {
-                      final cb = _getIncreaseCallback();
-                      if (cb != null) {
-                        cb();
-                        // add one of the current selection to the cart
-                        _cart.addItem(CartItem(
-                          sandwichType: sandwichType,
-                          bread: _selectedBreadType.name,
-                          quantity: 1,
-                          notes: noteForDisplay,
-                          isFootlong: _isFootlong,
-                        ));
-                      }
-                    },
-                    icon: Icons.add,
-                    label: 'Add',
-                    colour: Colors.blue,
+                  const Text('Quantity: ', style: normalText),
+                  IconButton(
+                    onPressed: _getDecreaseCallback(),
+                    icon: const Icon(Icons.remove),
                   ),
-                  const SizedBox(width: 8),
-                  StyledButton(
-                    onPressed: () {
-                      final cb = _getDecreaseCallback();
-                      if (cb != null) {
-                        cb();
-                      }
-                    },
-                    icon: Icons.remove,
-                    label: 'Remove',
-                    colour: Colors.red,
+                  Text('$_quantity', style: heading1),
+                  IconButton(
+                    onPressed: _increaseQuantity,
+                    icon: const Icon(Icons.add),
                   ),
                 ],
               ),
+              const SizedBox(height: 20),
+              StyledButton(
+                onPressed: _getAddToCartCallback(),
+                icon: Icons.add_shopping_cart,
+                label: 'Add to Cart',
+                colour: Colors.green, // fixed named parameter
+              ),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text('Total: \$${totalPrice.toStringAsFixed(2)}',
+                    style: normalText),
+              ),
+              const SizedBox(height: 20),
             ],
           ),
         ),

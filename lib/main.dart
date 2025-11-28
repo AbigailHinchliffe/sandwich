@@ -278,6 +278,67 @@ class _OrderScreenState extends State<OrderScreen> {
                 label: 'Add to Cart',
                 colour: Colors.green, // fixed named parameter
               ),
+              const SizedBox(height: 12),
+              // Cart summary: shows number of items and total price, updates automatically
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: AnimatedBuilder(
+                  animation: _cart,
+                  builder: (context, _) {
+                    final int count = _cart.itemCount;
+                    final String total = _cart.totalPrice().toStringAsFixed(2);
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Cart: $count items — Total: \$${total}',
+                          key: const Key('cart_summary'),
+                          style: normalText,
+                        ),
+                        const SizedBox(height: 8),
+                        // list of items with remove buttons
+                        SizedBox(
+                          height: 120,
+                          child: _cart.isEmpty
+                              ? const SizedBox.shrink()
+                              : ListView.separated(
+                                  itemCount: _cart.items.length,
+                                  separatorBuilder: (_, __) => const Divider(),
+                                  itemBuilder: (context, i) {
+                                    final item = _cart.items[i];
+                                    return Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            '${item.quantity} × ${item.bread} ${item.sandwichType}',
+                                            style: normalText,
+                                          ),
+                                        ),
+                                        IconButton(
+                                          key: Key('cart_remove_one_$i'),
+                                          tooltip: 'Remove one',
+                                          onPressed: () => _cart.removeOneAt(i),
+                                          icon:
+                                              const Icon(Icons.remove_circle_outline),
+                                        ),
+                                        IconButton(
+                                          key: Key('cart_remove_item_$i'),
+                                          tooltip: 'Remove item',
+                                          onPressed: () => _cart.removeItemAt(i),
+                                          icon: const Icon(Icons.delete),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
               const SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),

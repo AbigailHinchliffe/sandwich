@@ -185,4 +185,34 @@ void main() {
       expect(find.text('0 white footlong sandwich(es): '), findsOneWidget);
     });
   });
+
+  group('OrderScreen - Cart', () {
+    testWidgets('shows SnackBar confirmation when Add to Cart tapped',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(const App());
+
+      // tap the Add to Cart button
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Add to Cart'));
+      await tester.pump(); // start animations / SnackBar
+      await tester.pump(const Duration(seconds: 1)); // allow SnackBar to appear
+
+      // SnackBar content includes 'Added' (we assert the confirmation is shown)
+      expect(find.textContaining('Added'), findsOneWidget);
+    });
+
+    testWidgets('cart summary updates when Add to Cart tapped', (WidgetTester tester) async {
+      await tester.pumpWidget(const App());
+
+      // initial summary
+      expect(find.byKey(const Key('cart_summary')), findsOneWidget);
+      expect(find.text('Cart: 0 items — Total: \$0.00'), findsOneWidget);
+
+      // tap Add to Cart (initial quantity = 1, footlong price = 11.00)
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Add to Cart'));
+      await tester.pump(); // process add
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.text('Cart: 1 items — Total: \$11.00'), findsOneWidget);
+    });
+  });
 }

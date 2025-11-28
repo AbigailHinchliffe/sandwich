@@ -240,6 +240,7 @@ class _OrderScreenState extends State<OrderScreen> {
                 children: [
                   const Text('Six-inch', style: normalText),
                   Switch(
+                    key: const Key('size_switch'),
                     value: _isFootlong,
                     onChanged: _onSizeChanged,
                   ),
@@ -270,6 +271,18 @@ class _OrderScreenState extends State<OrderScreen> {
                     icon: const Icon(Icons.add),
                   ),
                 ],
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: TextField(
+                  key: const Key('notes_textfield'),
+                  controller: _notesController,
+                  decoration: const InputDecoration(
+                    labelText: 'Notes',
+                    hintText: 'Add special instructions (optional)',
+                  ),
+                ),
               ),
               const SizedBox(height: 20),
               StyledButton(

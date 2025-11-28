@@ -1,4 +1,3 @@
-
 enum BreadType { white, wheat, multigrain, sourdough, wholemeal }
 
 enum SandwichType {
@@ -33,13 +32,23 @@ class Sandwich {
   }
 
   String get image {
-    String typeString = type.name;
-    String sizeString = '';
-    if (isFootlong) {
-      sizeString = 'footlong';
-    } else {
-      sizeString = 'six_inch';
+    switch (type) {
+      case SandwichType.veggieDelight:
+        return isFootlong
+            ? 'assets/images/veggieDelight_footlong.jpg'
+            : 'assets/images/veggieDelightSixInch.jpg';
+      case SandwichType.chickenTeriyaki:
+        return isFootlong
+            ? 'assets/images/chickenTeriyaki_footlong.jpg'
+            : 'assets/images/chickenTeriyakiSixInch.jpg';
+      case SandwichType.tunaMelt:
+        return isFootlong
+            ? 'assets/images/tuneMelt_footlong.webp'
+            : 'assets/images/tuneMeltSixInch.webp';
+      case SandwichType.meatballMarinara:
+        return isFootlong
+            ? 'assets/images/meatballMarinara_footlong.jpg'
+            : 'assets/images/meatballMarinaraSixInch.jpg';
     }
-    return 'assets/images/${typeString}_$sizeString.jpg';
   }
 }

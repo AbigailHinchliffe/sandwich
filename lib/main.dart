@@ -3,6 +3,7 @@ import 'package:sandwich/repositories/pricing_repository.dart';
 import 'package:sandwich/views/app_styles.dart';
 import 'package:sandwich/models/cart.dart';
 import 'package:sandwich/models/sandwich.dart';
+import 'package:sandwich/views/cart_view.dart' as cart_view;
 
 void main() {
   runApp(const App());
@@ -177,6 +178,32 @@ class _OrderScreenState extends State<OrderScreen> {
     return null;
   }
 
+  // New: pre-fill the order form from a cart item so user can edit it.
+  // This mirrors the "Edit" behavior expected by the cart_view layout.
+  void _startEditingItem(int index) {
+    final item = _cart.items[index];
+
+    // find SandwichType from the stored sandwichType name
+    final SandwichType foundType = SandwichType.values.firstWhere(
+      (t) => Sandwich(type: t, isFootlong: item.isFootlong, breadType: BreadType.white).name == item.sandwichType,
+      orElse: () => SandwichType.veggieDelight,
+    );
+
+    setState(() {
+      _selectedSandwichType = foundType;
+      _isFootlong = item.isFootlong;
+      _selectedBreadType = BreadType.values.firstWhere(
+        (b) => b.name == item.bread,
+        orElse: () => BreadType.white,
+      );
+      _quantity = item.quantity;
+      _notesController.text = item.notes;
+    });
+
+    // remove the original item so user can modify and re-add it
+    _cart.removeItemAt(index);
+  }
+
   @override
   Widget build(BuildContext context) {
     final double totalPrice = _pricingRepository.calculatePrice(
@@ -191,8 +218,27 @@ class _OrderScreenState extends State<OrderScreen> {
           style: heading1,
         ),
         actions: [
-          // show cart icon in top-right
-          CartIconButton(cart: _cart),
+          // show cart icon in top-right -> navigate to full cart screen
+          IconButton(
+            key: const Key('open_cart'),
+            icon: const Icon(Icons.shopping_cart),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => CartScreen(
+                    cart: _cart,
+                    onEdit: (index) {
+                      // call the OrderScreen edit flow and close cart
+                      setState(() {
+                        _startEditingItem(index);
+                      });
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
           const SizedBox(width: 8),
         ],
       ),
@@ -319,30 +365,60 @@ class _OrderScreenState extends State<OrderScreen> {
                                   separatorBuilder: (_, __) => const Divider(),
                                   itemBuilder: (context, i) {
                                     final item = _cart.items[i];
-                                    return Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            '${item.quantity} × ${item.bread} ${item.sandwichType}',
-                                            style: normalText,
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              '${item.quantity}x ${item.bread} ${item.sandwichType}',
+                                              style: normalText,
+                                            ),
                                           ),
-                                        ),
-                                        IconButton(
-                                          key: Key('cart_remove_one_$i'),
-                                          tooltip: 'Remove one',
-                                          onPressed: () => _cart.removeOneAt(i),
-                                          icon:
-                                              const Icon(Icons.remove_circle_outline),
-                                        ),
-                                        IconButton(
-                                          key: Key('cart_remove_item_$i'),
-                                          tooltip: 'Remove item',
-                                          onPressed: () => _cart.removeItemAt(i),
-                                          icon: const Icon(Icons.delete),
-                                        ),
-                                      ],
+
+                                          // Quantity controls: decrement, quantity label, increment
+                                          Row(
+                                            children: [
+                                              IconButton(
+                                                key: Key('cart_dec_$i'),
+                                                tooltip: 'Decrease quantity',
+                                                onPressed: () => _cart.removeOneAt(i),
+                                                icon: const Icon(Icons.remove_circle_outline),
+                                              ),
+                                              Text('${item.quantity}', style: normalText),
+                                              IconButton(
+                                                key: Key('cart_inc_$i'),
+                                                tooltip: 'Increase quantity',
+                                                onPressed: () => _cart.addItem(CartItem(
+                                                  sandwichType: item.sandwichType,
+                                                  bread: item.bread,
+                                                  quantity: 1,
+                                                  notes: item.notes,
+                                                  isFootlong: item.isFootlong,
+                                                )),
+                                                icon: const Icon(Icons.add_circle_outline),
+                                              ),
+                                            ],
+                                          ),
+
+                                          // Edit button
+                                          IconButton(
+                                            key: Key('cart_edit_$i'),
+                                            tooltip: 'Edit item',
+                                            onPressed: () => _startEditingItem(i),
+                                            icon: const Icon(Icons.edit),
+                                          ),
+
+                                          // Remove item button
+                                          IconButton(
+                                            key: Key('cart_remove_item_$i'),
+                                            tooltip: 'Remove item',
+                                            onPressed: () => _cart.removeItemAt(i),
+                                            icon: const Icon(Icons.delete),
+                                          ),
+                                        ],
+                                      ),
                                     );
                                   },
                                 ),
@@ -481,6 +557,58 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+// New: full-screen cart screen using the cart_view widget
+class CartScreen extends StatelessWidget {
+  final Cart cart;
+  final void Function(int index) onEdit;
+
+  const CartScreen({super.key, required this.cart, required this.onEdit});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Your Cart'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: AnimatedBuilder(
+          animation: cart,
+          builder: (context, _) {
+            // Map the project's CartItem model to the view's CartItem shape
+            final items = cart.items
+                .map((it) => cart_view.CartItem(
+                      name: it.sandwichType,
+                      bread: it.bread,
+                      quantity: it.quantity,
+                    ))
+                .toList();
+
+            return items.isEmpty
+                ? const Center(child: Text('Cart is empty'))
+                : cart_view.CartView(
+                    items: items,
+                    onIncrement: (index) {
+                      final modelItem = cart.items[index];
+                      cart.addItem(CartItem(
+                        sandwichType: modelItem.sandwichType,
+                        bread: modelItem.bread,
+                        quantity: 1,
+                        notes: modelItem.notes,
+                        isFootlong: modelItem.isFootlong,
+                      ));
+                    },
+                    onDecrement: (index) => cart.removeOneAt(index),
+                    onRemove: (index) => cart.removeItemAt(index),
+                    onEdit: (index) => onEdit(index),
+                  );
+          },
+        ),
       ),
     );
   }

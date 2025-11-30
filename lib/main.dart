@@ -304,7 +304,7 @@ class _OrderScreenState extends State<OrderScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Cart: $count items — Total: \$${total}',
+                          'Cart: $count items — Total: \$$total',
                           key: const Key('cart_summary'),
                           style: normalText,
                         ),

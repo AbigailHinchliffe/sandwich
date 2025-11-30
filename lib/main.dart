@@ -227,6 +227,7 @@ class _OrderScreenState extends State<OrderScreen> {
                 MaterialPageRoute(
                   builder: (_) => CartScreen(
                     cart: _cart,
+                    maxQuantity: widget.maxQuantity, // pass max through
                     onEdit: (index) {
                       // call the OrderScreen edit flow and close cart
                       setState(() {
@@ -383,20 +384,49 @@ class _OrderScreenState extends State<OrderScreen> {
                                               IconButton(
                                                 key: Key('cart_dec_$i'),
                                                 tooltip: 'Decrease quantity',
-                                                onPressed: () => _cart.removeOneAt(i),
+                                                onPressed: () {
+                                                  // if more than 1, remove one; if this is last, remove and show Undo
+                                                  if (item.quantity > 1) {
+                                                    _cart.removeOneAt(i);
+                                                  } else {
+                                                    final removed = CartItem(
+                                                      sandwichType: item.sandwichType,
+                                                      bread: item.bread,
+                                                      quantity: item.quantity,
+                                                      notes: item.notes,
+                                                      isFootlong: item.isFootlong,
+                                                    );
+                                                    _cart.removeItemAt(i);
+                                                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      SnackBar(
+                                                        content: const Text('Item removed'),
+                                                        action: SnackBarAction(
+                                                          label: 'Undo',
+                                                          onPressed: () {
+                                                            _cart.addItem(removed);
+                                                          },
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }
+                                                },
                                                 icon: const Icon(Icons.remove_circle_outline),
                                               ),
                                               Text('${item.quantity}', style: normalText),
                                               IconButton(
                                                 key: Key('cart_inc_$i'),
                                                 tooltip: 'Increase quantity',
-                                                onPressed: () => _cart.addItem(CartItem(
-                                                  sandwichType: item.sandwichType,
-                                                  bread: item.bread,
-                                                  quantity: 1,
-                                                  notes: item.notes,
-                                                  isFootlong: item.isFootlong,
-                                                )),
+                                                // disable increment when at max
+                                                onPressed: item.quantity < widget.maxQuantity
+                                                    ? () => _cart.addItem(CartItem(
+                                                          sandwichType: item.sandwichType,
+                                                          bread: item.bread,
+                                                          quantity: 1,
+                                                          notes: item.notes,
+                                                          isFootlong: item.isFootlong,
+                                                        ))
+                                                    : null,
                                                 icon: const Icon(Icons.add_circle_outline),
                                               ),
                                             ],
@@ -480,94 +510,13 @@ class StyledButton extends StatelessWidget {
   }
 }
 
-class OrderItemDisplay extends StatelessWidget {
-  final int quantity;
-  final String itemType;
-  final BreadType breadType;
-  final String notes;
-
-  const OrderItemDisplay(this.quantity, this.itemType, this.breadType,
-      this.notes,
-      {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final emojis = List.filled(quantity, '🥪').join();
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          color: Colors.cyanAccent,
-          alignment: Alignment.center,
-          width: 300,
-          height: 80,
-          child: Text(
-            "$quantity ${breadType.name} $itemType sandwich(es): $emojis",
-          ),
-        ),
-        if (notes.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 6.0),
-            child: Text(
-              'Note: $notes',
-              style: const TextStyle(fontStyle: FontStyle.italic),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  void _incrementCounter() {
-    setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'Welcome to my sandwich shop!',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-}
-
 // New: full-screen cart screen using the cart_view widget
 class CartScreen extends StatelessWidget {
   final Cart cart;
+  final int maxQuantity;
   final void Function(int index) onEdit;
 
-  const CartScreen({super.key, required this.cart, required this.onEdit});
+  const CartScreen({super.key, required this.cart, required this.onEdit, this.maxQuantity = 10});
 
   @override
   Widget build(BuildContext context) {
@@ -593,17 +542,53 @@ class CartScreen extends StatelessWidget {
                 ? const Center(child: Text('Cart is empty'))
                 : cart_view.CartView(
                     items: items,
+                    maxQuantity: maxQuantity,
                     onIncrement: (index) {
                       final modelItem = cart.items[index];
-                      cart.addItem(CartItem(
-                        sandwichType: modelItem.sandwichType,
-                        bread: modelItem.bread,
-                        quantity: 1,
-                        notes: modelItem.notes,
-                        isFootlong: modelItem.isFootlong,
-                      ));
+                      if (modelItem.quantity < maxQuantity) {
+                        cart.addItem(CartItem(
+                          sandwichType: modelItem.sandwichType,
+                          bread: modelItem.bread,
+                          quantity: 1,
+                          notes: modelItem.notes,
+                          isFootlong: modelItem.isFootlong,
+                        ));
+                      } else {
+                        // optionally notify user that max reached
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Maximum quantity reached (${maxQuantity})')),
+                        );
+                      }
                     },
-                    onDecrement: (index) => cart.removeOneAt(index),
+                    onDecrement: (index) {
+                      final modelItem = cart.items[index];
+                      if (modelItem.quantity > 1) {
+                        cart.removeOneAt(index);
+                      } else {
+                        // last unit: remove with undo
+                        final removed = CartItem(
+                          sandwichType: modelItem.sandwichType,
+                          bread: modelItem.bread,
+                          quantity: modelItem.quantity,
+                          notes: modelItem.notes,
+                          isFootlong: modelItem.isFootlong,
+                        );
+                        cart.removeItemAt(index);
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Item removed'),
+                            action: SnackBarAction(
+                              label: 'Undo',
+                              onPressed: () {
+                                cart.addItem(removed);
+                              },
+                            ),
+                          ),
+                        );
+                      }
+                    },
                     onRemove: (index) => cart.removeItemAt(index),
                     onEdit: (index) => onEdit(index),
                   );

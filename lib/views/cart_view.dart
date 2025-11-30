@@ -22,6 +22,7 @@ class CartView extends StatelessWidget {
   final void Function(int index) onDecrement;
   final void Function(int index) onRemove;
   final void Function(int index) onEdit;
+  final int maxQuantity; // new
 
   const CartView({
     Key? key,
@@ -30,6 +31,7 @@ class CartView extends StatelessWidget {
     required this.onDecrement,
     required this.onRemove,
     required this.onEdit,
+    this.maxQuantity = 10, // default
   }) : super(key: key);
 
   @override
@@ -70,8 +72,9 @@ class CartView extends StatelessWidget {
                   IconButton(
                     key: Key('cart_inc_$index'),
                     icon: const Icon(Icons.add_circle_outline),
-                    onPressed: () => onIncrement(index),
-                    tooltip: 'Increase quantity',
+                    // disable increment when at or above maxQuantity
+                    onPressed: item.quantity < maxQuantity ? () => onIncrement(index) : null,
+                    tooltip: item.quantity < maxQuantity ? 'Increase quantity' : 'Max reached',
                   ),
                 ],
               ),

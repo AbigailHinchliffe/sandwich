@@ -127,4 +127,52 @@ void main() {
     final total = cart.totalPrice();
     expect(total, closeTo(47.0, 0.0001));
   });
+
+  // New: updateItemAt replaces an item and totalPrice reflects changes
+  test('updateItemAt replaces item and updates totalPrice', () {
+    cart.addItem(CartItem(
+      sandwichType: 'footlong',
+      bread: 'white',
+      quantity: 1,
+      isFootlong: true,
+    ));
+    expect(cart.items.length, 1);
+    expect(cart.totalPrice(), closeTo(11.0, 0.0001));
+
+    // update to quantity 3
+    cart.updateItemAt(0, CartItem(
+      sandwichType: 'footlong',
+      bread: 'white',
+      quantity: 3,
+      isFootlong: true,
+    ));
+
+    expect(cart.items[0].quantity, 3);
+    expect(cart.totalPrice(), closeTo(33.0, 0.0001));
+  });
+
+  // New: invalid index for updateItemAt is ignored (no throw, no change)
+  test('updateItemAt with invalid index does nothing', () {
+    cart.addItem(CartItem(
+      sandwichType: 'six-inch',
+      bread: 'wheat',
+      quantity: 1,
+      isFootlong: false,
+    ));
+    final before = cart.items.map((e) => e.quantity).toList();
+    cart.updateItemAt(-1, CartItem(
+      sandwichType: 'six-inch',
+      bread: 'wheat',
+      quantity: 5,
+      isFootlong: false,
+    ));
+    cart.updateItemAt(10, CartItem(
+      sandwichType: 'six-inch',
+      bread: 'wheat',
+      quantity: 5,
+      isFootlong: false,
+    ));
+    final after = cart.items.map((e) => e.quantity).toList();
+    expect(after, before);
+  });
 }

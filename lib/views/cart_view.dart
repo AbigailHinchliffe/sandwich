@@ -22,17 +22,19 @@ class CartView extends StatelessWidget {
   final void Function(int index) onDecrement;
   final void Function(int index) onRemove;
   final void Function(int index) onEdit;
-  final int maxQuantity; // new
+  final int maxQuantity;
+  final void Function(int index)? onLongPressRemove; // new optional
 
   const CartView({
-    Key? key,
+    super.key,
     required this.items,
     required this.onIncrement,
     required this.onDecrement,
     required this.onRemove,
     required this.onEdit,
-    this.maxQuantity = 10, // default
-  }) : super(key: key);
+    this.maxQuantity = 10,
+    this.onLongPressRemove,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -62,37 +64,53 @@ class CartView extends StatelessWidget {
               // Quantity controls
               Row(
                 children: [
-                  IconButton(
-                    key: Key('cart_dec_$index'),
-                    icon: const Icon(Icons.remove_circle_outline),
-                    onPressed: () => onDecrement(index),
-                    tooltip: 'Decrease quantity',
+                  Semantics(
+                    label: 'Decrease quantity for item $index',
+                    button: true,
+                    child: IconButton(
+                      key: Key('cart_dec_$index'),
+                      icon: const Icon(Icons.remove_circle_outline),
+                      onPressed: () => onDecrement(index),
+                      tooltip: 'Decrease quantity',
+                    ),
                   ),
                   Text('${item.quantity}', style: const TextStyle(fontSize: 16)),
-                  IconButton(
-                    key: Key('cart_inc_$index'),
-                    icon: const Icon(Icons.add_circle_outline),
-                    // disable increment when at or above maxQuantity
-                    onPressed: item.quantity < maxQuantity ? () => onIncrement(index) : null,
-                    tooltip: item.quantity < maxQuantity ? 'Increase quantity' : 'Max reached',
+                  Semantics(
+                    label: 'Increase quantity for item $index',
+                    button: true,
+                    child: IconButton(
+                      key: Key('cart_inc_$index'),
+                      icon: const Icon(Icons.add_circle_outline),
+                      onPressed: item.quantity < maxQuantity ? () => onIncrement(index) : null,
+                      tooltip: item.quantity < maxQuantity ? 'Increase quantity' : 'Max reached',
+                    ),
                   ),
                 ],
               ),
 
               // Edit button
-              IconButton(
-                key: Key('cart_edit_$index'),
-                icon: const Icon(Icons.edit),
-                onPressed: () => onEdit(index),
-                tooltip: 'Edit item',
+              Semantics(
+                label: 'Edit item $index',
+                button: true,
+                child: IconButton(
+                  key: Key('cart_edit_$index'),
+                  icon: const Icon(Icons.edit),
+                  onPressed: () => onEdit(index),
+                  tooltip: 'Edit item',
+                ),
               ),
 
-              // Remove button
-              IconButton(
-                key: Key('cart_remove_item_$index'),
-                icon: const Icon(Icons.delete_outline),
-                onPressed: () => onRemove(index),
-                tooltip: 'Remove item',
+              // Remove button: tap => immediate remove (handled by caller), long-press => optional confirmation dialog
+              Semantics(
+                label: 'Remove item $index',
+                button: true,
+                child: IconButton(
+                  key: Key('cart_remove_item_$index'),
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => onRemove(index),
+                  onLongPress: onLongPressRemove != null ? () => onLongPressRemove!(index) : null,
+                  tooltip: 'Remove item',
+                ),
               ),
             ],
           ),

@@ -178,30 +178,116 @@ class _OrderScreenState extends State<OrderScreen> {
     return null;
   }
 
-  // New: pre-fill the order form from a cart item so user can edit it.
-  // This mirrors the "Edit" behavior expected by the cart_view layout.
-  void _startEditingItem(int index) {
-    final item = _cart.items[index];
-
-    // find SandwichType from the stored sandwichType name
-    final SandwichType foundType = SandwichType.values.firstWhere(
-      (t) => Sandwich(type: t, isFootlong: item.isFootlong, breadType: BreadType.white).name == item.sandwichType,
+  // New: show editor dialog to edit existing cart item in-place
+  Future<void> _showEditDialog(int index) async {
+    final modelItem = _cart.items[index];
+    int quantity = modelItem.quantity;
+    bool isFootlong = modelItem.isFootlong;
+    SandwichType sandType = SandwichType.values.firstWhere(
+      (t) => Sandwich(type: t, isFootlong: isFootlong, breadType: BreadType.white).name == modelItem.sandwichType,
       orElse: () => SandwichType.veggieDelight,
     );
+    BreadType breadType = BreadType.values.firstWhere(
+      (b) => b.name == modelItem.bread,
+      orElse: () => BreadType.white,
+    );
+    final TextEditingController notesController = TextEditingController(text: modelItem.notes);
 
-    setState(() {
-      _selectedSandwichType = foundType;
-      _isFootlong = item.isFootlong;
-      _selectedBreadType = BreadType.values.firstWhere(
-        (b) => b.name == item.bread,
-        orElse: () => BreadType.white,
-      );
-      _quantity = item.quantity;
-      _notesController.text = item.notes;
-    });
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(builder: (ctx2, setState2) {
+          return AlertDialog(
+            title: const Text('Edit item'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownMenu<SandwichType>(
+                    width: double.infinity,
+                    initialSelection: sandType,
+                    dropdownMenuEntries: SandwichType.values.map((t) {
+                      final s = Sandwich(type: t, isFootlong: true, breadType: BreadType.white);
+                      return DropdownMenuEntry<SandwichType>(value: t, label: s.name);
+                    }).toList(),
+                    onSelected: (v) {
+                      if (v != null) setState2(() { sandType = v; });
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Six-inch'),
+                      Switch(value: isFootlong, onChanged: (val) => setState2(() => isFootlong = val)),
+                      const Text('Footlong'),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownMenu<BreadType>(
+                    width: double.infinity,
+                    initialSelection: breadType,
+                    dropdownMenuEntries: BreadType.values.map((b) =>
+                      DropdownMenuEntry<BreadType>(value: b, label: b.name)).toList(),
+                    onSelected: (v) {
+                      if (v != null) setState2(() { breadType = v; });
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.remove),
+                        onPressed: () {
+                          if (quantity > 1) setState2(() => quantity--);
+                        },
+                      ),
+                      Text('$quantity'),
+                      IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: quantity < widget.maxQuantity ? () => setState2(() => quantity++) : null,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: notesController,
+                    decoration: const InputDecoration(labelText: 'Notes'),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(ctx2).pop(), child: const Text('Cancel')),
+              TextButton(onPressed: () {
+                // validation
+                if (quantity < 1 || quantity > widget.maxQuantity) {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Quantity must be 1–${widget.maxQuantity}')),
+                  );
+                  return;
+                }
 
-    // remove the original item so user can modify and re-add it
-    _cart.removeItemAt(index);
+                // replace item in-place and notify listeners
+                final updated = CartItem(
+                  sandwichType: Sandwich(type: sandType, isFootlong: isFootlong, breadType: breadType).name,
+                  bread: breadType.name,
+                  quantity: quantity,
+                  notes: notesController.text,
+                  isFootlong: isFootlong,
+                );
+                _cart.updateItemAt(index, updated);
+                Navigator.of(ctx2).pop();
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Item updated')));
+              }, child: const Text('Save')),
+            ],
+          );
+        });
+      },
+    );
   }
 
   @override
@@ -219,26 +305,24 @@ class _OrderScreenState extends State<OrderScreen> {
         ),
         actions: [
           // show cart icon in top-right -> navigate to full cart screen
-          IconButton(
-            key: const Key('open_cart'),
-            icon: const Icon(Icons.shopping_cart),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => CartScreen(
-                    cart: _cart,
-                    maxQuantity: widget.maxQuantity, // pass max through
-                    onEdit: (index) {
-                      // call the OrderScreen edit flow and close cart
-                      setState(() {
-                        _startEditingItem(index);
-                      });
-                      Navigator.of(context).pop();
-                    },
+          Semantics(
+            label: 'Open cart',
+            button: true,
+            child: IconButton(
+              key: const Key('open_cart'),
+              icon: const Icon(Icons.shopping_cart),
+              tooltip: 'Open cart',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => CartScreen(
+                      cart: _cart,
+                      maxQuantity: widget.maxQuantity, // pass max through
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
           const SizedBox(width: 8),
         ],
@@ -385,7 +469,6 @@ class _OrderScreenState extends State<OrderScreen> {
                                                 key: Key('cart_dec_$i'),
                                                 tooltip: 'Decrease quantity',
                                                 onPressed: () {
-                                                  // if more than 1, remove one; if this is last, remove and show Undo
                                                   if (item.quantity > 1) {
                                                     _cart.removeOneAt(i);
                                                   } else {
@@ -417,7 +500,6 @@ class _OrderScreenState extends State<OrderScreen> {
                                               IconButton(
                                                 key: Key('cart_inc_$i'),
                                                 tooltip: 'Increase quantity',
-                                                // disable increment when at max
                                                 onPressed: item.quantity < widget.maxQuantity
                                                     ? () => _cart.addItem(CartItem(
                                                           sandwichType: item.sandwichType,
@@ -436,15 +518,72 @@ class _OrderScreenState extends State<OrderScreen> {
                                           IconButton(
                                             key: Key('cart_edit_$i'),
                                             tooltip: 'Edit item',
-                                            onPressed: () => _startEditingItem(i),
+                                            onPressed: () => _showEditDialog(i),
                                             icon: const Icon(Icons.edit),
                                           ),
 
-                                          // Remove item button
+                                          // Remove item button: tap immediate + Undo, long-press shows confirmation dialog
                                           IconButton(
                                             key: Key('cart_remove_item_$i'),
                                             tooltip: 'Remove item',
-                                            onPressed: () => _cart.removeItemAt(i),
+                                            onPressed: () {
+                                              final removed = CartItem(
+                                                sandwichType: item.sandwichType,
+                                                bread: item.bread,
+                                                quantity: item.quantity,
+                                                notes: item.notes,
+                                                isFootlong: item.isFootlong,
+                                              );
+                                              _cart.removeItemAt(i);
+                                              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: const Text('Item removed'),
+                                                  action: SnackBarAction(
+                                                    label: 'Undo',
+                                                    onPressed: () {
+                                                      _cart.addItem(removed);
+                                                    },
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                            onLongPress: () async {
+                                              final messenger = ScaffoldMessenger.of(context);
+                                              final confirmed = await showDialog<bool>(
+                                                context: context,
+                                                builder: (ctx) => AlertDialog(
+                                                  title: const Text('Confirm remove'),
+                                                  content: const Text('Remove this item from the cart?'),
+                                                  actions: [
+                                                    TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+                                                    TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Remove')),
+                                                  ],
+                                                ),
+                                              );
+                                              if (confirmed == true) {
+                                                final removed = CartItem(
+                                                  sandwichType: item.sandwichType,
+                                                  bread: item.bread,
+                                                  quantity: item.quantity,
+                                                  notes: item.notes,
+                                                  isFootlong: item.isFootlong,
+                                                );
+                                                _cart.removeItemAt(i);
+                                                messenger.hideCurrentSnackBar();
+                                                messenger.showSnackBar(
+                                                  SnackBar(
+                                                    content: const Text('Item removed'),
+                                                    action: SnackBarAction(
+                                                      label: 'Undo',
+                                                      onPressed: () {
+                                                        _cart.addItem(removed);
+                                                      },
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                            },
                                             icon: const Icon(Icons.delete),
                                           ),
                                         ],
@@ -514,28 +653,174 @@ class StyledButton extends StatelessWidget {
 class CartScreen extends StatelessWidget {
   final Cart cart;
   final int maxQuantity;
-  final void Function(int index) onEdit;
 
-  const CartScreen({super.key, required this.cart, required this.onEdit, this.maxQuantity = 10});
+  const CartScreen({super.key, required this.cart, this.maxQuantity = 10});
 
   @override
   Widget build(BuildContext context) {
+    // helper to show editor dialog inside CartScreen and update cart in-place
+    Future<void> showEditDialog(int index) async {
+      final modelItem = cart.items[index];
+      int quantity = modelItem.quantity;
+      bool isFootlong = modelItem.isFootlong;
+      SandwichType sandType = SandwichType.values.firstWhere(
+        (t) => Sandwich(type: t, isFootlong: isFootlong, breadType: BreadType.white).name == modelItem.sandwichType,
+        orElse: () => SandwichType.veggieDelight,
+      );
+      BreadType breadType = BreadType.values.firstWhere(
+        (b) => b.name == modelItem.bread,
+        orElse: () => BreadType.white,
+      );
+      final TextEditingController notesController = TextEditingController(text: modelItem.notes);
+
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) {
+          return StatefulBuilder(builder: (ctx2, setState2) {
+            return AlertDialog(
+              title: const Text('Edit item'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownMenu<SandwichType>(
+                      width: double.infinity,
+                      initialSelection: sandType,
+                      dropdownMenuEntries: SandwichType.values.map((t) {
+                        final s = Sandwich(type: t, isFootlong: true, breadType: BreadType.white);
+                        return DropdownMenuEntry<SandwichType>(value: t, label: s.name);
+                      }).toList(),
+                      onSelected: (v) { if (v != null) setState2(() { sandType = v; }); },
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Six-inch'),
+                        Switch(value: isFootlong, onChanged: (val) => setState2(() => isFootlong = val)),
+                        const Text('Footlong'),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownMenu<BreadType>(
+                      width: double.infinity,
+                      initialSelection: breadType,
+                      dropdownMenuEntries: BreadType.values.map((b) =>
+                        DropdownMenuEntry<BreadType>(value: b, label: b.name)).toList(),
+                      onSelected: (v) { if (v != null) setState2(() { breadType = v; }); },
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.remove),
+                          onPressed: () {
+                            if (quantity > 1) setState2(() => quantity--);
+                          },
+                        ),
+                        Text('$quantity'),
+                        IconButton(
+                          icon: const Icon(Icons.add),
+                          onPressed: quantity < maxQuantity ? () => setState2(() => quantity++) : null,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(controller: notesController, decoration: const InputDecoration(labelText: 'Notes')),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.of(ctx2).pop(), child: const Text('Cancel')),
+                TextButton(onPressed: () {
+                  if (quantity < 1 || quantity > maxQuantity) {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Quantity must be 1–$maxQuantity')));
+                    return;
+                  }
+                  final updated = CartItem(
+                    sandwichType: Sandwich(type: sandType, isFootlong: isFootlong, breadType: breadType).name,
+                    bread: breadType.name,
+                    quantity: quantity,
+                    notes: notesController.text,
+                    isFootlong: isFootlong,
+                  );
+                  cart.updateItemAt(index, updated);
+                  Navigator.of(ctx2).pop();
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Item updated')));
+                }, child: const Text('Save')),
+              ],
+            );
+          });
+        },
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Your Cart'),
+        actions: [
+          Semantics(
+            label: 'Clear cart',
+            button: true,
+            child: IconButton(
+              key: const Key('cart_clear'),
+              tooltip: 'Clear cart',
+              icon: const Icon(Icons.delete_forever),
+              onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Clear cart'),
+                    content: const Text('Are you sure you want to clear the entire cart?'),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+                      TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Clear')),
+                    ],
+                  ),
+                );
+                if (confirm == true) {
+                  // save exact state for undo
+                  final removedItems = cart.items
+                      .map((it) => CartItem(
+                            sandwichType: it.sandwichType,
+                            bread: it.bread,
+                            quantity: it.quantity,
+                            notes: it.notes,
+                            isFootlong: it.isFootlong,
+                          ))
+                      .toList();
+                  cart.clear();
+                  messenger.hideCurrentSnackBar();
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: const Text('Cart cleared'),
+                      action: SnackBarAction(
+                        label: 'Undo',
+                        onPressed: () {
+                          for (final it in removedItems) {
+                            cart.addItem(it);
+                          }
+                        },
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: AnimatedBuilder(
           animation: cart,
           builder: (context, _) {
-            // Map the project's CartItem model to the view's CartItem shape
             final items = cart.items
-                .map((it) => cart_view.CartItem(
-                      name: it.sandwichType,
-                      bread: it.bread,
-                      quantity: it.quantity,
-                    ))
+                .map((it) => cart_view.CartItem(name: it.sandwichType, bread: it.bread, quantity: it.quantity))
                 .toList();
 
             return items.isEmpty
@@ -554,10 +839,9 @@ class CartScreen extends StatelessWidget {
                           isFootlong: modelItem.isFootlong,
                         ));
                       } else {
-                        // optionally notify user that max reached
                         ScaffoldMessenger.of(context).hideCurrentSnackBar();
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Maximum quantity reached (${maxQuantity})')),
+                          SnackBar(content: Text('Maximum quantity reached ($maxQuantity)')),
                         );
                       }
                     },
@@ -566,7 +850,6 @@ class CartScreen extends StatelessWidget {
                       if (modelItem.quantity > 1) {
                         cart.removeOneAt(index);
                       } else {
-                        // last unit: remove with undo
                         final removed = CartItem(
                           sandwichType: modelItem.sandwichType,
                           bread: modelItem.bread,
@@ -589,8 +872,67 @@ class CartScreen extends StatelessWidget {
                         );
                       }
                     },
-                    onRemove: (index) => cart.removeItemAt(index),
-                    onEdit: (index) => onEdit(index),
+                    onRemove: (index) {
+                      final modelItem = cart.items[index];
+                      final removed = CartItem(
+                        sandwichType: modelItem.sandwichType,
+                        bread: modelItem.bread,
+                        quantity: modelItem.quantity,
+                        notes: modelItem.notes,
+                        isFootlong: modelItem.isFootlong,
+                      );
+                      cart.removeItemAt(index);
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Item removed'),
+                          action: SnackBarAction(
+                            label: 'Undo',
+                            onPressed: () {
+                              cart.addItem(removed);
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                    onLongPressRemove: (index) async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Confirm remove'),
+                          content: const Text('Remove this item from the cart?'),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+                            TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Remove')),
+                          ],
+                        ),
+                      );
+                      if (confirmed == true) {
+                        final modelItem = cart.items[index];
+                        final removed = CartItem(
+                          sandwichType: modelItem.sandwichType,
+                          bread: modelItem.bread,
+                          quantity: modelItem.quantity,
+                          notes: modelItem.notes,
+                          isFootlong: modelItem.isFootlong,
+                        );
+                        cart.removeItemAt(index);
+                        messenger.hideCurrentSnackBar();
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: const Text('Item removed'),
+                            action: SnackBarAction(
+                              label: 'Undo',
+                              onPressed: () {
+                                cart.addItem(removed);
+                              },
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    onEdit: (index) => showEditDialog(index),
                   );
           },
         ),

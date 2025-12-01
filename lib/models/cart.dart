@@ -77,6 +77,13 @@ class Cart extends ChangeNotifier {
   double totalPrice() {
     return _items.fold(0.0, (sum, item) => sum + item.totalPrice(pricingRepo));
   }
+
+  /// Replace the item at `index` with `newItem` and notify listeners.
+  void updateItemAt(int index, CartItem newItem) {
+    if (index < 0 || index >= _items.length) return;
+    _items[index] = newItem;
+    notifyListeners();
+  }
 }
 
 /// Small reusable Cart icon button that shows a popup listing items and the total.

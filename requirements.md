@@ -152,3 +152,22 @@ void updateItemAt(int index, CartItem newItem)
 
 ## Sign-off
 - The feature is complete when all acceptance criteria and tests pass. After implementation, run the full test suite and perform a manual exploratory UI pass to verify Undo, SnackBars, and editor behavior.
+
+---
+
+
+## New feature: Profile screen (draft)
+
+AI assistant prompt (for the feature):
+"As a product manager, add a simple Profile screen to the Sandwich Shop app where users can view and edit their name, email, and phone number. No authentication or persistence is required for this exercise — saving should simply show a confirmation (SnackBar) and close the screen. The screen must be reachable from the Order screen via a link/button at the bottom. Provide deterministic Keys for every interactive widget to support widget tests, and include widget tests verifying the fields and Save behavior."
+
+Acceptance details (append):
+- Add Profile screen UI:
+  - Fields: Name (Key: 'profile_name'), Email (Key: 'profile_email'), Phone (Key: 'profile_phone').
+  - Actions: Save (Key: 'profile_save') — validates basic non-empty name and shows SnackBar "Profile saved" and pops; Cancel (Key: 'profile_cancel') — pops without changes.
+- Navigation:
+  - OrderScreen includes a link/button at the bottom: "Open Profile" (Key: 'open_profile') that pushes ProfileScreen.
+- Tests:
+  - Widget tests must assert the presence of fields and keys.
+  - Test that entering values and pressing Save shows the SnackBar "Profile saved".
+- No persistence required for now.

@@ -4,6 +4,7 @@ import 'package:sandwich/views/app_styles.dart';
 import 'package:sandwich/models/cart.dart';
 import 'package:sandwich/models/sandwich.dart';
 import 'package:sandwich/views/cart_view.dart' as cart_view;
+export 'package:sandwich/views/profile_screen.dart';
 
 void main() {
   runApp(const App());

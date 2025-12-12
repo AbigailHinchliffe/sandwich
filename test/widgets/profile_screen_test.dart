@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sandwich/main.dart'; 
+import 'package:sandwich/main.dart';
+import 'package:sandwich/views/profile_screen.dart';
 
 void main() {
   testWidgets('Profile screen shows fields and save works', (WidgetTester tester) async {
@@ -34,19 +35,22 @@ void main() {
     expect(find.text('Name is required'), findsOneWidget);
   });
 
-  testWidgets('Profile screen can be opened from Order screen', (WidgetTester tester) async {
+  testWidgets('Profile screen can be opened from drawer', (WidgetTester tester) async {
     await tester.pumpWidget(const App());
     await tester.pumpAndSettle();
 
     // Verify we're on order screen
     expect(find.text('Sandwich Counter'), findsOneWidget);
     
-    // Find and tap the "Open Profile" button
-    final openProfileButton = find.byKey(const Key('open_profile'));
-    expect(openProfileButton, findsOneWidget);
+    // Open the drawer
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
     
-    await tester.ensureVisible(openProfileButton);
-    await tester.tap(openProfileButton);
+    // Find and tap the Profile menu item in the drawer
+    final profileMenuItem = find.byKey(const Key('drawer_profile'));
+    expect(profileMenuItem, findsOneWidget);
+    
+    await tester.tap(profileMenuItem);
     await tester.pumpAndSettle();
 
     // Verify we're now on the profile screen

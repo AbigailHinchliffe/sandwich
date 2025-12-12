@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sandwich/views/app_styles.dart';
 import 'package:sandwich/models/cart.dart';
+import 'package:sandwich/widgets/app_drawer.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final Cart cart;
@@ -123,6 +124,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       appBar: AppBar(
         title: const Text('Checkout', style: heading1),
       ),
+      drawer: AppDrawer(cart: widget.cart),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(

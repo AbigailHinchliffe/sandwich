@@ -5,9 +5,8 @@ import 'package:sandwich/models/cart.dart';
 import 'package:sandwich/models/sandwich.dart';
 import 'package:sandwich/views/cart_view.dart' as cart_view;
 import 'package:sandwich/views/checkout_screen.dart';
-import 'package:sandwich/views/profile_screen.dart';
-export 'package:sandwich/views/profile_screen.dart';
 import 'package:sandwich/views/about_screen.dart';
+import 'package:sandwich/widgets/app_drawer.dart';
 
 void main() {
   runApp(const App());
@@ -340,6 +339,7 @@ class _OrderScreenState extends State<OrderScreen> {
           const SizedBox(width: 8),
         ],
       ),
+      drawer: AppDrawer(cart: _cart, maxQuantity: widget.maxQuantity),
       body: Center(
         child: SingleChildScrollView(
           child: Column(
@@ -617,27 +617,6 @@ class _OrderScreenState extends State<OrderScreen> {
                     style: normalText),
               ),
               const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: TextButton(
-                  key: const Key('open_profile'),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const ProfileScreen(),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    'Open Profile',
-                    style: TextStyle(
-                      fontSize: 16,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -895,6 +874,7 @@ class _CartScreenState extends State<CartScreen> {
           ),
         ],
       ),
+      drawer: AppDrawer(cart: widget.cart, maxQuantity: widget.maxQuantity),
       body: Column(
         children: [
           Expanded(

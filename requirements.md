@@ -35,13 +35,24 @@
 
 ---
 
+## Navigation Drawer ✅
+
+**Capabilities:** Unified navigation across all screens via drawer menu, accessible from AppBar hamburger icon
+**Menu Items:** Order (home), Cart, Profile, About
+**Keys:** `drawer_order`, `drawer_cart`, `drawer_profile`, `drawer_about`
+**Behavior:** Drawer automatically closes before navigation, accessible from all screens
+**Status:** Complete
+
+---
+
 ## Navigation Flow
 
 ```
-OrderScreen (/)
-├─> CartScreen → CheckoutScreen → (auto) back to OrderScreen
-├─> ProfileScreen → Cancel/Save → back to OrderScreen
-└─> AboutScreen (/about) → back
+All Screens have Drawer →
+  ├─> Order (home)
+  ├─> Cart → Checkout → (auto) back to Order
+  ├─> Profile → Cancel/Save → back
+  └─> About → back
 ```
 
 **Cart workflow:** Order → Cart (shows items) → Checkout → Payment → Confirmation SnackBar → Cart cleared → Return to Order

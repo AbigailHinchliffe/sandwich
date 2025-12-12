@@ -56,15 +56,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             TextField(
-              key: const Key('profile_name'),
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                hintText: 'Enter your name',
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
               key: const Key('profile_email'),
               controller: _emailController,
               decoration: const InputDecoration(

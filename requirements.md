@@ -1,33 +1,55 @@
-# Cart Modification Feature Requirements
+# Sandwich Shop App - Feature Requirements
 
-## Overview
+## Cart Modification ✅
 
-This document specifies the requirements for adding cart modification capabilities to the Sandwich Shop Flutter app. The app already includes an Order screen (where users select sandwiches) and a Cart screen (where users view items and total price). The Cart model and PricingRepository already exist: the Cart manages items and totals, and PricingRepository computes prices based on quantity and size only.
-
-Purpose: allow users to modify items already in their cart without leaving the Cart screen. Modifications include changing item quantity, removing items, and editing item details (size, bread, notes). The goal is to make cart editing intuitive, accessible, testable, and robust.
-
----
-
-## Feature description
-
-Name: Cart Item Modification
-
-Primary capabilities:
-- Increment/decrement quantity for each cart item.
-- Remove an item entirely.
-- Edit item details (size, bread, notes — optionally sandwich type if desired).
-- Clear the cart (bulk action) with confirmation and undo.
-- Provide immediate visual feedback and undoable removal actions.
-
-Constraints and assumptions:
-- PricingRepository determines price from quantity and size only; sandwich type and bread do not affect price.
-- The Cart is implemented as a ChangeNotifier-like model with add/remove methods. If an `updateItemAt(index, CartItem)` method is missing, the implementation may add one with minimal, backward-compatible behavior.
-- UI must expose deterministic Keys for all actionable widgets to support widget tests.
-- All UI updates should be synchronous (no network calls). If async is needed later, UI should show progress and remain responsive.
+**Capabilities:** Increment/decrement quantity, remove items, edit details (size, bread, notes), clear cart with undo
+**Keys:** `increment_${index}`, `decrement_${index}`, `remove_${index}`, `edit_${index}`, `clear_cart`
+**Status:** Complete
 
 ---
 
-## User stories
+## Checkout Screen ✅
+
+**Capabilities:** Display order summary, process payment (2s simulation), generate order confirmation, auto-clear cart
+**Keys:** `checkout_button` (in CartScreen)
+**Behavior:** Shows items, total, payment method. Returns order ID + estimated time, navigates back to Order screen
+**Status:** Complete
+
+---
+
+## Profile Screen ✅
+
+**Capabilities:** Edit email and phone, save with validation, cancel without saving
+**Keys:** `profile_email`, `profile_phone`, `profile_save`, `profile_cancel`, `open_profile` (navigation)
+**Navigation:** Accessible from Order screen bottom link "Open Profile"
+**Status:** Complete
+
+---
+
+## About Screen ✅
+
+**Route:** `/about`
+**Content:** Static "Welcome to Sandwich Shop!" message with business description
+**Status:** Complete (no navigation trigger in UI yet)
+
+---
+
+## Navigation Flow
+
+```
+OrderScreen (/)
+├─> CartScreen → CheckoutScreen → (auto) back to OrderScreen
+├─> ProfileScreen → Cancel/Save → back to OrderScreen
+└─> AboutScreen (/about) → back
+```
+
+**Cart workflow:** Order → Cart (shows items) → Checkout → Payment → Confirmation SnackBar → Cart cleared → Return to Order
+
+---
+
+## Detailed Requirements (Cart Modification only)
+
+### User stories
 
 ### 1. As a shopper, I want to change the quantity of an item in my cart so I can buy multiple sandwiches without re-adding them.
 
@@ -126,32 +148,14 @@ void updateItemAt(int index, CartItem newItem)
   - Clearing the cart via Clear button removes all items and shows Undo.
 
 ### Performance and robustness
-- UI operations must be immediate and not cause jank. Button presses should not cause frame drops.
-- Handle rapid repeated taps gracefully (either by debouncing or by relying on the Cart model to handle atomic updates).
+- UI operations must be immediate and not cause jank
+- Handle rapid repeated taps gracefully
 
 ---
 
-## Subtasks (implementation plan)
+## Implementation Notes
 
-1. Add missing keys and test hooks to `lib/main.dart` (if not already present): `cart_summary`, `cart_inc_<index>`, `cart_dec_<index>`, `cart_remove_item_<index>`, `cart_edit_<index>`.
-2. Add `updateItemAt(int index, CartItem newItem)` to `lib/models/cart.dart` if missing.
-3. Implement increment/decrement buttons in cart UI and wire to Cart methods.
-4. Implement Remove button + SnackBar Undo.
-5. Implement Edit flow (modal bottom sheet or screen) and wire Save/Cancel.
-6. Add Clear cart UI + confirm dialog + Undo.
-7. Add/adjust widget tests and unit tests to cover all acceptance criteria.
-8. Manual accessibility pass: add semantic labels, tooltips, and verify tappable areas.
-
----
-
-## Open decisions / questions
-- Should the decrement-to-zero behavior remove the item automatically, or should the decrement button be disabled at 1 and require explicit remove? The acceptance criteria assume decrement-to-zero removes the item but the editor prevents zero. If you prefer to prevent zero everywhere, update the acceptance criteria accordingly.
-- Undo semantics: should we allow multiple undo actions to stack, or only one undo at a time? The document assumes a single, short-lived undo per removal.
-
----
-
-## Sign-off
-- The feature is complete when all acceptance criteria and tests pass. After implementation, run the full test suite and perform a manual exploratory UI pass to verify Undo, SnackBars, and editor behavior.
+All features are complete and tested. Cart model supports `updateItemAt(int index, CartItem newItem)` for in-place edits.
 
 ---
 
@@ -163,7 +167,7 @@ AI assistant prompt (for the feature):
 
 Acceptance details (append):
 - Add Profile screen UI:
-  - Fields: Name (Key: 'profile_name'), Email (Key: 'profile_email'), Phone (Key: 'profile_phone').
+  - Fields: Email (Key: 'profile_email'), Phone (Key: 'profile_phone').
   - Actions: Save (Key: 'profile_save') — validates basic non-empty name and shows SnackBar "Profile saved" and pops; Cancel (Key: 'profile_cancel') — pops without changes.
 - Navigation:
   - OrderScreen includes a link/button at the bottom: "Open Profile" (Key: 'open_profile') that pushes ProfileScreen.
@@ -171,3 +175,4 @@ Acceptance details (append):
   - Widget tests must assert the presence of fields and keys.
   - Test that entering values and pressing Save shows the SnackBar "Profile saved".
 - No persistence required for now.
+

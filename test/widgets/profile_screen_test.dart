@@ -33,4 +33,26 @@ void main() {
     await tester.pump();
     expect(find.text('Name is required'), findsOneWidget);
   });
+
+  testWidgets('Profile screen can be opened from Order screen', (WidgetTester tester) async {
+    await tester.pumpWidget(const App());
+    await tester.pumpAndSettle();
+
+    // Verify we're on order screen
+    expect(find.text('Sandwich Counter'), findsOneWidget);
+    
+    // Find and tap the "Open Profile" button
+    final openProfileButton = find.byKey(const Key('open_profile'));
+    expect(openProfileButton, findsOneWidget);
+    
+    await tester.ensureVisible(openProfileButton);
+    await tester.tap(openProfileButton);
+    await tester.pumpAndSettle();
+
+    // Verify we're now on the profile screen
+    expect(find.text('Profile'), findsOneWidget);
+    expect(find.byKey(const Key('profile_name')), findsOneWidget);
+    expect(find.byKey(const Key('profile_email')), findsOneWidget);
+    expect(find.byKey(const Key('profile_phone')), findsOneWidget);
+  });
 }

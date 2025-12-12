@@ -5,7 +5,9 @@ import 'package:sandwich/models/cart.dart';
 import 'package:sandwich/models/sandwich.dart';
 import 'package:sandwich/views/cart_view.dart' as cart_view;
 import 'package:sandwich/views/checkout_screen.dart';
+import 'package:sandwich/views/profile_screen.dart';
 export 'package:sandwich/views/profile_screen.dart';
+import 'package:sandwich/views/about_screen.dart';
 
 void main() {
   runApp(const App());
@@ -18,7 +20,10 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Sandwich Shop App',
-      home: OrderScreen(maxQuantity: 5),
+      home: const OrderScreen(maxQuantity: 5),
+      routes: {
+        '/about': (context) => const AboutScreen()
+      }
     );
   }
 }
@@ -610,6 +615,27 @@ class _OrderScreenState extends State<OrderScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Text('Total: \$${totalPrice.toStringAsFixed(2)}',
                     style: normalText),
+              ),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: TextButton(
+                  key: const Key('open_profile'),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ProfileScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Open Profile',
+                    style: TextStyle(
+                      fontSize: 16,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 20),
             ],

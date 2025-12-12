@@ -19,9 +19,10 @@
 
 ## Profile Screen ✅
 
-**Capabilities:** Edit email and phone, save with validation, cancel without saving
-**Keys:** `profile_email`, `profile_phone`, `profile_save`, `profile_cancel`, `open_profile` (navigation)
+**Capabilities:** Edit name, email and phone, save with validation, cancel without saving
+**Keys:** `profile_name`, `profile_email`, `profile_phone`, `profile_save`, `profile_cancel`, `open_profile` (navigation)
 **Navigation:** Accessible from Order screen bottom link "Open Profile"
+**Validation:** Name is required (cannot be empty)
 **Status:** Complete
 
 ---
